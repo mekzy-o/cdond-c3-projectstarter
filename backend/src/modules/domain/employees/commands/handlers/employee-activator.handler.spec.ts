@@ -6,10 +6,10 @@ describe('Employee Remover', () => {
   describe('when a user activates an employee', () => {
     const MockEmployeeRepository = jest.fn<EmployeeRepository, []>(
       () =>
-        ({
-          findById: jest.fn().mockResolvedValue([]),
-          save: jest.fn(),
-        } as any),
+      ({
+        findById: jest.fn().mockResolvedValue([]),
+        save: jest.fn(),
+      } as any),
     );
 
     const employeeRepository = new MockEmployeeRepository();
@@ -32,7 +32,7 @@ describe('Employee Remover', () => {
       await handler.handle(activateEmployeeCommand);
 
       // Assert
-      expect(employeeRepository.findById).toBeCalledWith(100);
+      expect(employeeRepository.findById).toBeCalledWith(101);
       expect(employeeRepository.save).toBeCalled();
     });
   });
