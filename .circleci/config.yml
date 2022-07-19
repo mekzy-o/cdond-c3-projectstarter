@@ -212,7 +212,7 @@ jobs:
 
   run-migrations:
     docker:
-      - image: circleci/node:13.8.0
+      - image: cimg/node:13.8.0
     steps:
       - checkout
       - install_awscli
@@ -229,6 +229,7 @@ jobs:
             then
               curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
+          no_output_timeout: 10m
       - destroy-environment
       - revert-migrations
 
