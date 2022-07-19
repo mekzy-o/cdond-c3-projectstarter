@@ -1,6 +1,27 @@
 version: 2.1
 
 commands:
+  install_awscli:
+    description: Install AWS CLI v2
+    steps:
+      - run:
+          name: Install AWS CLI v2
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+
+  install_ansible:
+    description: Install Ansible
+    steps:
+      - run:
+          name: Install Ansible
+          command: |
+            sudo apt update
+            sudo apt install software-properties-common -y
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install ansible -y
+
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
@@ -27,7 +48,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/H8SH6ADKgJKkC3fWVsSjfW/migration_<< parameters.Workflow_ID >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_<< parameters.Workflow_ID >>)
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend
@@ -160,6 +181,86 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
 
+  configure-infrastructure:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install_awscli
+      - install_ansible
+      - add_ssh_keys:
+          fingerprints:
+            - "d0:48:e0:36:ee:6e:45:ce:24:33:9f:f2:4e:5d:73:38"
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy-environment
+
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - install_awscli
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm install
+            npm run migrations > migrations_dump.txt
+      - run:
+          name: Send migration results to memstash
+          command: |
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              curl --insecure  https://kvdb.io/${KVDB_BUCKET}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            fi
+      - destroy-environment
+      - revert-migrations
+
+  # deploy-frontend:
+  #   docker:
+  #     # Docker image here that supports AWS CLI
+  #   steps:
+  #     # Checkout code from git
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           # your code here
+  #     - run:
+  #         name: Get backend url
+  #         command: |
+  #           # your code here
+  #           export API_URL="http://${BACKEND_IP}:3030"
+  #           echo "${API_URL}"
+  #     - run:
+  #         name: Deploy frontend objects
+  #         command: |
+  #           # your code here
+  #     # Here's where you will add some code to rollback on failure
+
+  # deploy-backend:
+  #   docker:
+  #     # Docker image here that supports Ansible
+  #   steps:
+  #     # Checkout code from git
+  #     # Add ssh keys with fingerprint
+  #     # attach workspace
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           # your code here
+  #     - run:
+  #         name: Deploy backend
+  #         command: |
+  #           # your code here
+  #     # Here's where you will add some code to rollback on failure
+
 workflows:
   default:
     jobs:
@@ -178,3 +279,7 @@ workflows:
           filters:
             branches:
               only: [master]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
