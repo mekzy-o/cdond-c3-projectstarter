@@ -375,7 +375,7 @@ jobs:
                       list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                       --no-paginate --output text)
             echo "Old Workflow ID: $OLD_WORKFLOW_ID"
-            curl https://kvdb.io/H8SH6ADKgJKkC3fWVsSjfW/old_workflow_id -d "${OLD_WORKFLOW_ID}"
+            curl https://kvdb.io/${KVDB_BUCKET}/old_workflow_id -d "${OLD_WORKFLOW_ID}"
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name InitialStack \
