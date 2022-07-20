@@ -386,9 +386,10 @@ jobs:
 
   cleanup:
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     steps:
       - checkout
+      - install_awscli
       - run:
           name: Fetch oldStack Workflow ID
           command: |
@@ -409,6 +410,9 @@ jobs:
               aws s3 rb "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+            else
+              echo -------------Cannot Cleanup-------------
+
             fi
 
 workflows:
