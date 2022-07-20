@@ -386,10 +386,9 @@ jobs:
 
   cleanup:
     docker:
-      - image: cimg/base:stable
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - install_awscli
       - run:
           name: Fetch oldStack Workflow ID
           command: |
