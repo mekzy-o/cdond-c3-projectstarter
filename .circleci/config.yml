@@ -391,12 +391,14 @@ jobs:
       - checkout
       - install_awscli
       - run:
-          name: Fetch oldStack Workflow ID
+          name: Get old stack workflow id
           command: |
-            export STACKS=$(aws cloudformation list-stacks \
+            export STACKS=($(aws cloudformation list-stacks \
             --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
-            echo Stack names: "$STACKS
+            --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+            echo Stack names: "${STACKS[@]}"
+            echo Stack names1: "${STACKS}"
+            echo Stack names2: $STACKS[@]
             export OldWorkflowID=$(curl --insecure https://kvdb.io/Y27UnRmWURUY7rEBDKx19h/old_workflow_id)
             echo OldWorkflow_ID: $OldWorkflowID
       - run:
