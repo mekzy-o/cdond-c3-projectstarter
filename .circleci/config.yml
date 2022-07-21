@@ -241,7 +241,7 @@ jobs:
       - install_awscli
       - install_nodejs
       - restore_cache:
-          keys: [frontend-deps]
+          keys: [frontend-build]
       - run:
           name: Install dependencies
           command: |
@@ -283,7 +283,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - restore_cache:
-          keys: [backend-deps]
+          keys: [backend-build]
       - run:
           name: Install dependencies
           command: |
@@ -391,18 +391,6 @@ jobs:
       - checkout
       - install_awscli
       - install_nodejs
-      # - run:
-      #     name: Get old stack workflow id
-      #     command: |
-      #       export STACKS=($(aws cloudformation list-stacks \
-      #       --query "StackSummaries[*].StackName" \
-      #       --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
-      #       echo Stack names: "${STACKS[@]}"
-      #       echo Stack names1: "${STACKS}"
-      #       echo Stack names2: $STACKS[@]
-      #       echo ${CIRCLE_WORKFLOW_ID:0:7}
-      #       export OldWorkflowID=$(curl --insecure https://kvdb.io/Y27UnRmWURUY7rEBDKx19h/old_workflow_id)
-      #       echo OldWorkflow_ID: $OldWorkflowID
       - run:
           name: Remove old stacks and files
           command: |
