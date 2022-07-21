@@ -390,27 +390,35 @@ jobs:
     steps:
       - checkout
       - install_awscli
+      - install_nodejs
+      # - run:
+      #     name: Get old stack workflow id
+      #     command: |
+      #       export STACKS=($(aws cloudformation list-stacks \
+      #       --query "StackSummaries[*].StackName" \
+      #       --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+      #       echo Stack names: "${STACKS[@]}"
+      #       echo Stack names1: "${STACKS}"
+      #       echo Stack names2: $STACKS[@]
+      #       echo ${CIRCLE_WORKFLOW_ID:0:7}
+      #       export OldWorkflowID=$(curl --insecure https://kvdb.io/Y27UnRmWURUY7rEBDKx19h/old_workflow_id)
+      #       echo OldWorkflow_ID: $OldWorkflowID
       - run:
-          name: Get old stack workflow id
+          name: Remove old stacks and files
           command: |
             export STACKS=($(aws cloudformation list-stacks \
             --query "StackSummaries[*].StackName" \
             --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+
             echo Stack names: "${STACKS[@]}"
-            echo Stack names1: "${STACKS}"
-            echo Stack names2: $STACKS[@]
-            export OldWorkflowID=$(curl --insecure https://kvdb.io/Y27UnRmWURUY7rEBDKx19h/old_workflow_id)
-            echo OldWorkflow_ID: $OldWorkflowID
-      - run:
-          name: Remove old stacks and files
-          command: |
             export OldWorkflowID=$(curl --insecure https://kvdb.io/Y27UnRmWURUY7rEBDKx19h/old_workflow_id)
             echo OldWorkflow_ID: $OldWorkflowID
 
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
               echo -------------Deleting old stacks-------------
-              aws s3 rb "s3://udapeople-${OldWorkflowID}" --recursive
+
+              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
             else
