@@ -3,4 +3,4 @@
 
 
 2. S3 Bucket(URL02)
-  http://udapeople-6303e0b.s3-website-us-east-1.amazonaws.com/#/employees
+  http://udapeople-7af8805.s3-website-us-east-1.amazonaws.com/#/employees
